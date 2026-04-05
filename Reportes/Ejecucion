@@ -1,0 +1,70 @@
+package reportes;
+
+public class Ejecucion {
+    private int numero;
+    private String algoritmo;
+    private String orden;
+    private int tamanio;
+    private int comparaciones;
+    private int intercambios;
+    private int iteraciones;
+    private long tiempoMs;
+    private String arregloOriginal;
+    private String arregloFinal;
+    private String velocidad;
+    private String perfilSistema;
+
+    // constructor
+    public Ejecucion(int numero, String algoritmo, String orden, int tamanio,int comparaciones, int intercambios, int iteraciones,long tiempoMs, String arregloOriginal, String arregloFinal,String velocidad, String perfilSistema) {
+        this.numero = numero;
+        this.algoritmo = algoritmo;
+        this.orden = orden;
+        this.tamanio = tamanio;
+        this.comparaciones = comparaciones;
+        this.intercambios = intercambios;
+        this.iteraciones = iteraciones;
+        this.tiempoMs = tiempoMs;
+        this.arregloOriginal = arregloOriginal;
+        this.arregloFinal = arregloFinal;
+        this.velocidad = velocidad;
+        this.perfilSistema = perfilSistema;
+    }
+
+    // getters
+    public int getNumero() { 
+        return numero; 
+    }
+    public String getAlgoritmo() {
+        return algoritmo; 
+    }
+    public String getOrden() { 
+        return orden;
+    }
+    public int getTamanio() { 
+        return tamanio; 
+    }
+    public int getComparaciones() { 
+        return comparaciones;
+    }
+    public int getIntercambios() { 
+        return intercambios; 
+    }
+    public int getIteraciones() { 
+        return iteraciones; 
+    }
+    public long getTiempoMs() {
+        return tiempoMs;
+    }
+    public String getArregloOriginal() { 
+        return arregloOriginal; 
+    }
+    public String getArregloFinal() { 
+        return arregloFinal;
+    }
+    public String getVelocidad() { 
+        return velocidad; 
+    }
+    public String getPerfilSistema() { 
+        return perfilSistema; 
+    }
+}

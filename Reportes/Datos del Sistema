@@ -1,0 +1,44 @@
+package reportes;
+
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.HardwareAbstractionLayer;
+
+public class DatosSistema {
+
+    public static String obtenerPerfil() {
+        StringBuilder sb = new StringBuilder();
+
+        String os = System.getProperty("os.name");
+        String arch = System.getProperty("os.arch");
+        sb.append("Sistema Operativo: ").append(os).append(" (").append(arch).append(")\n");
+
+        int cores = Runtime.getRuntime().availableProcessors();
+        sb.append("Núcleos de CPU disponibles: ").append(cores).append("\n");
+
+        long totalMem = Runtime.getRuntime().totalMemory();
+        long freeMem = Runtime.getRuntime().freeMemory();
+        sb.append("RAM total (JVM): ").append(totalMem / (1024 * 1024)).append(" MB\n");
+        sb.append("RAM disponible (JVM): ").append(freeMem / (1024 * 1024)).append(" MB\n");
+
+        try {
+            SystemInfo si = new SystemInfo();
+            HardwareAbstractionLayer hal = si.getHardware();
+            CentralProcessor cpu = hal.getProcessor();
+
+            String modelo = cpu.getProcessorIdentifier().getName();
+            sb.append("Procesador: ").append(modelo).append("\n");
+
+            long freq = cpu.getProcessorIdentifier().getVendorFreq() / 1_000_000;
+            sb.append("Frecuencia: ").append(freq).append(" MHz\n");
+
+            long totalFisica = hal.getMemory().getTotal();
+            sb.append("RAM física total: ").append(totalFisica / (1024 * 1024 * 1024)).append(" GB\n");
+            
+        } catch (Exception e) {
+            sb.append("No se pudo obtener información detallada del hardware.\n");
+        }
+
+        return sb.toString();
+    }
+}

@@ -1,0 +1,243 @@
+package gui;
+
+import javax.swing.SwingUtilities;
+
+public class HiloOrdenamiento extends Thread {
+
+    private PanelVisualizador panel;
+    private int[] arreglo;
+    private String algoritmo;
+    private boolean esAscendente; 
+    private int retardoMs;
+
+    private int comparaciones = 0;
+    private int intercambios = 0;
+    private int iteraciones = 0;
+
+    public HiloOrdenamiento(PanelVisualizador panel, int[] arreglo, String algoritmo, boolean esAscendente, int retardoMs) {
+        this.panel = panel;
+        this.arreglo = arreglo;
+        this.algoritmo = algoritmo;
+        this.esAscendente = esAscendente;
+        this.retardoMs = retardoMs;
+    }
+
+    @Override
+    public void run() {
+        SwingUtilities.invokeLater(() -> {
+            panel.reiniciarEstadisticas();
+            panel.limpiarLog();
+            panel.agregarLog("Iniciando " + algoritmo + " - " + (esAscendente ? "Ascendente" : "Descendente"));
+        });
+
+        switch (algoritmo) {
+            case "Bubble Sort":
+                ejecutarBubbleSort();
+                break;
+            case "Shell Sort":
+                ejecutarShellSort();
+                break;
+            default:
+                ejecutarQuickSort(0, arreglo.length - 1);
+                break;
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            for (int i = 0; i < arreglo.length; i++) {
+                panel.marcarOrdenado(i);
+            }
+            panel.finalizarOrdenamiento(arreglo, comparaciones, intercambios, iteraciones);
+            panel.agregarLog("Ordenamiento completado");
+            panel.habilitarControles(true);
+        });
+    }
+
+    private void ejecutarBubbleSort() {
+        int n = arreglo.length;
+
+        for (int pasada = 0; pasada < n - 1; pasada++) {
+            iteraciones++;
+            actualizarEstadisticasUI();
+
+            for (int j = 0; j < n - pasada - 1; j++) {
+                comparaciones++;
+                marcarComparacion(j, j + 1);
+                esperar();
+
+                boolean hayQueIntercambiar = esAscendente ? arreglo[j] > arreglo[j + 1] : arreglo[j] < arreglo[j + 1];
+
+                if (hayQueIntercambiar) {
+                    intercambios++;
+                    marcarIntercambio(j, j + 1);
+                    esperar();
+
+                    int temporal = arreglo[j];
+                    arreglo[j] = arreglo[j + 1];
+                    arreglo[j + 1] = temporal;
+
+                    refrescarGrafica();
+                    esperar();
+                }
+
+                limpiarColores(j, j + 1);
+                esperar();
+            }
+
+            panel.marcarOrdenado(n - pasada - 1);
+        }
+
+        panel.marcarOrdenado(0);
+    }
+
+        
+    // toma la distancia gap, y compara si hay que realizar un cambio, dependiendo si es ascendente o descendente.
+    // i = gap
+    // valor actual = arreglo[gap] = arreglo[i], gap se divide entre 2 cada vez.
+    // j = i
+    // ejemplo: gap = 2, [0,2,4,6,8] [3, 1, 7, 4, 10], arreglo original [8, 3, 9, 1, 5, 7, 2, 4, 6, 10] 
+    //j = 2, valor actual = arreglo[2] = 9 (Valor del indice 2 del arreglo orignal)
+    // realiza arreglo[j - gap] si es ascendente > valor actual, sino < valor actual
+    // si arreglo[j - gap] > valor actual = 9 entonces intercambia.
+    
+    private void ejecutarShellSort() {
+        int n = arreglo.length;
+
+        for (int gap = n / 2; gap > 0; gap /= 2) {
+            iteraciones++;
+            actualizarEstadisticasUI();
+
+            for (int i = gap; i < n; i++) {
+                int valorActual = arreglo[i];
+                int j = i;
+
+                while (j >= gap) {
+                    comparaciones++;
+                    marcarComparacion(j - gap, j);
+                    esperar();
+
+                    boolean hayQueDesplazar = esAscendente ? arreglo[j - gap] > valorActual : arreglo[j - gap] < valorActual;
+
+                    if (hayQueDesplazar) {
+                        intercambios++;
+                        marcarIntercambio(j - gap, j);
+                        esperar();
+
+                        arreglo[j] = arreglo[j - gap];
+                        refrescarGrafica();
+                        esperar();
+
+                        limpiarColores(j - gap, j);
+                        j -= gap;
+                    } else {
+                        limpiarColores(j - gap, j);
+                        break;
+                    }
+                    esperar();
+                }
+
+                arreglo[j] = valorActual;
+                refrescarGrafica();
+            }
+        }
+    }
+
+    //Elegir un pivote (ultimo elemento).
+    //Particionar el arreglo: colocar todos los elementos menores (o iguales) al pivote a su izquierda y los mayores a su derecha. Al final de la partición, el pivote queda en su posición final.
+    //Aplicar recursivamente el mismo proceso a las sublistas izquierda y derecha (sin incluir el pivote, que ya está ordenado).
+    private void ejecutarQuickSort(int inicio, int fin) {
+        if (inicio >= fin){
+            return;
+        }
+        iteraciones++;
+        actualizarEstadisticasUI();
+
+        int posicionPivote = particionar(inicio, fin);
+        panel.marcarOrdenado(posicionPivote);
+
+        ejecutarQuickSort(inicio, posicionPivote - 1);
+        ejecutarQuickSort(posicionPivote + 1, fin);
+    }
+
+    private int particionar(int inicio, int fin) {
+        int pivote = arreglo[fin];
+        int indiceMenor = inicio - 1;
+
+        for (int j = inicio; j < fin; j++) {
+            comparaciones++;
+            marcarComparacion(j, fin);
+            esperar();
+
+            boolean vaMenorAlPivote = esAscendente ? arreglo[j] <= pivote : arreglo[j] >= pivote;
+
+            if (vaMenorAlPivote) {
+                indiceMenor++;
+                intercambios++;
+                marcarIntercambio(indiceMenor, j);
+                esperar();
+
+                int temporal = arreglo[indiceMenor];
+                arreglo[indiceMenor] = arreglo[j];
+                arreglo[j] = temporal;
+
+                refrescarGrafica();
+                esperar();
+                limpiarColores(indiceMenor, j);
+            } else {
+                limpiarColores(j, fin);
+            }
+            esperar();
+        }
+
+        intercambios++;
+        int posicionFinalPivote = indiceMenor + 1;
+        marcarIntercambio(posicionFinalPivote, fin);
+        esperar();
+
+        int temporal = arreglo[posicionFinalPivote];
+        arreglo[posicionFinalPivote] = arreglo[fin];
+        arreglo[fin] = temporal;
+
+        refrescarGrafica();
+        esperar();
+        limpiarColores(posicionFinalPivote, fin);
+
+        return posicionFinalPivote;
+    }
+
+    private void marcarComparacion(int posA, int posB) {
+        SwingUtilities.invokeLater(() -> {
+            panel.actualizarComparacion(posA, posB);
+            panel.actualizarEstadisticas(comparaciones, intercambios, iteraciones);
+        });
+    }
+
+    private void marcarIntercambio(int posA, int posB) {
+        SwingUtilities.invokeLater(() -> {
+            panel.actualizarIntercambio(posA, posB);
+            panel.actualizarEstadisticas(comparaciones, intercambios, iteraciones);
+        });
+    }
+
+    private void limpiarColores(int posA, int posB) {
+        SwingUtilities.invokeLater(() -> {
+            panel.limpiarColores(posA, posB);
+            panel.actualizarEstadisticas(comparaciones, intercambios, iteraciones);
+        });
+    }
+
+    private void refrescarGrafica() {
+        SwingUtilities.invokeLater(() -> panel.actualizarGrafica(arreglo));
+    }
+
+    private void actualizarEstadisticasUI() {
+        SwingUtilities.invokeLater(() -> panel.actualizarEstadisticas(comparaciones, intercambios, iteraciones));
+    }
+
+    private void esperar() {
+        try {
+            Thread.sleep(retardoMs);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}

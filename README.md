@@ -147,3 +147,136 @@ El uso de `CardLayout` permite que los paneles no se destruyan al navegar, por l
 ---
 
  *Práctica 2 – Visualizador de algoritmos de ordenamiento.*
+
+---
+---
+
+ # Manual de Usuario – Visualizador de Algoritmos de Ordenamiento
+
+## 1. Introducción
+
+El **Visualizador de Algoritmos de Ordenamiento** es una aplicación de escritorio que permite cargar listas de números, ejecutar diferentes algoritmos de ordenamiento (Bubble Sort, Shell Sort, Quick Sort) y ver en tiempo real cómo se reordenan los elementos mediante una gráfica de barras animada. Además, la aplicación genera reportes automáticos con estadísticas y el perfil del sistema.
+
+## 2. Requisitos del sistema
+
+- Sistema operativo: Windows, Linux o macOS.
+- Java Runtime Environment (JRE) 11 o superior.
+- Resolución de pantalla recomendada: 1280×720 o superior.
+
+## 3. Inicio de la aplicación
+
+![[Pasted image 20260405153451.png]]  
+
+- **Visualizador**: accede a la pantalla de ordenamiento.
+- **Reportes**: muestra el historial de ejecuciones y genera reportes HTML.
+- **Ayuda / Información**: muestra una breve descripción de los algoritmos y las instrucciones básicas.
+
+## 4. Pantalla del visualizador
+
+Haga clic en **Visualizador** para ingresar. La pantalla se divide en cuatro secciones:
+
+![[Pasted image 20260405154555.png]]
+
+
+1. **Panel de controles** (izquierda): permite ingresar datos, elegir algoritmo, orden y velocidad.
+2. **Panel de estadísticas** (centro): muestra comparaciones, intercambios e iteraciones en tiempo real.
+3. **Log de operaciones** (derecha): bitácora con cada paso del algoritmo.
+4. **Gráfica de barras** (centro inferior): representa el arreglo; el color de cada barra indica su estado:
+   - 🔵 Azul: elemento en reposo (no está siendo comparado ni intercambiado, y aún no está ordenado).
+   - 🟡 Amarillo: elemento que se está comparando.
+   - 🔴 Rojo: elemento que se está intercambiando.
+   - 🟢 Verde: elemento ya colocado en su posición final (ordenado).
+
+## 5. Carga de datos
+
+Puede ingresar números de tres maneras:
+
+### 5.1. Ingreso manual
+- Escriba los números en el campo **Ingreso manual**, separados por comas o espacios.  
+  Ejemplo: `5, 2, 8, 1, 9`
+- Haga clic en el botón **Cargar**. La gráfica mostrará las barras correspondientes.
+
+### 5.2. Carga desde archivo de texto
+- Haga clic en **Cargar desde archivo**.
+- Seleccione un archivo `.txt` que contenga números separados por comas, espacios o saltos de línea.  
+  Ejemplo de contenido del archivo:  
+  `10 3 7 1 9`  
+  o  
+  `10,3,7,1,9`
+- Al abrirlo, el arreglo se cargará automáticamente.
+
+### 5.3. Generación aleatoria
+- En el campo **Cantidad**, elija cuántos números desea (entre 5 y 30).
+- Haga clic en **Aleatorio**. Se generarán números enteros entre 1 y 100.
+
+## 6. Configuración del ordenamiento
+
+- **Algoritmo**: elija entre `Bubble Sort`, `Shell Sort` o `Quick Sort`.
+- **Orden**: seleccione `Ascendente` (de menor a mayor) o `Descendente` (de mayor a menor).
+- **Velocidad**: puede elegir `Lento` (500 ms entre pasos), `Medio` (100 ms) o `Rápido` (20 ms).
+
+## 7. Iniciar el ordenamiento
+
+Una vez cargado un arreglo, presione el botón **Iniciar ordenamiento**. Durante la ejecución:
+
+- Los controles se deshabilitan para evitar interferencias.
+- La gráfica muestra los cambios de color según cada paso.
+- Las estadísticas y el log se actualizan automáticamente.
+- Puede cambiar de pantalla (por ejemplo, ir al menú o a reportes) y el proceso continúa en segundo plano. Al regresar, verá el progreso actual.
+
+Al terminar, todas las barras se vuelven verdes y se genera un reporte automático (ver sección 8).
+
+## 8. Reportes
+
+Desde el menú principal, haga clic en **Reportes**. Aparecerá una tabla con el historial de todas las ejecuciones de la sesión actual (los datos se pierden al cerrar la aplicación).
+
+![[Pasted image 20260405155815.png]]
+
+Cada fila contiene:
+- Número de ejecución (#)
+- Algoritmo usado
+- Orden (Ascendente/Descendente)
+- Tamaño del arreglo (n)
+- Comparaciones, intercambios e iteraciones realizadas
+- Tiempo total en milisegundos
+
+Además, **por cada ejecución se genera automáticamente un archivo HTML** en la carpeta `reportes/` (dentro de la misma ubicación del programa). El archivo incluye:
+- Resumen con todos los datos de la tabla.
+- Arreglo original y arreglo ordenado.
+- Perfil completo del sistema (sistema operativo, procesador, núcleos, RAM, etc.)
+
+Puede abrir estos archivos con cualquier navegador web.
+
+## 9. Botón Ayuda / Información
+
+Al hacer clic en el botón **Ayuda / Información** del menú principal, se abre una ventana emergente que muestra una breve descripción de los algoritmos de ordenamiento implementados (Bubble Sort, Shell Sort, Quick Sort) y las instrucciones básicas para utilizar la aplicación.
+
+![[Pasted image 20260405160308.png]]
+
+## 10. Botón "Regresar al Menú"
+
+En todas las pantallas (visualizador y reportes) encontrará un botón en la parte inferior derecha para volver al menú principal.
+
+## 11. Ejemplo de uso
+
+**Objetivo:** Ordenar los números `[3, 1, 4, 1, 5, 9, 2]` de forma ascendente con Bubble Sort a velocidad media.
+
+1. En el visualizador, escriba en el campo manual: `3,1,4,1,5,9,2`
+2. Presione **Cargar** (las barras se dibujan).
+3. Seleccione **Bubble Sort**, **Ascendente** y **Medio**.
+4. Presione **Iniciar ordenamiento**.
+5. Observe cómo las barras se comparan (amarillo) y se intercambian (rojo) hasta que todas quedan verdes.
+6. Revise el log para ver cada paso.
+7. Vaya al menú y luego a **Reportes**; debería ver una fila con los datos de esta ejecución.
+8. Busque la carpeta `reportes/` y abra el archivo HTML generado (por ejemplo `reporte_20250401_1.html`).
+
+## 12. Solución de problemas
+
+| Problema | Posible solución |
+|----------|------------------|
+| Al hacer clic en "Iniciar ordenamiento" no pasa nada | Asegúrese de que haya cargado un arreglo (campo no vacío, archivo válido o números aleatorios). |
+| La gráfica no se actualiza o se ve extraña | Verifique que las librerías JFreeChart estén correctamente instaladas. |
+| No se generan los reportes HTML | Compruebe que la aplicación tenga permisos de escritura en la carpeta donde se ejecuta. La carpeta `reportes/` se creará automáticamente. |
+| El programa se congela durante el ordenamiento | Esto no debería ocurrir, pero si sucede, reinicie la aplicación y seleccione una velocidad más lenta. |
+
+

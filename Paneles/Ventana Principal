@@ -1,0 +1,47 @@
+package gui;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class VentanaPrincipal extends JFrame {
+
+    private CardLayout cardLayout;
+    private JPanel panelContenedor;
+    private PanelReportes panelReportes;
+
+    public VentanaPrincipal() {
+        configurarVentana();
+        construirPaneles();
+    }
+
+    private void configurarVentana() {
+        setTitle("Visualizador de Algoritmos de Ordenamiento");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1000, 700);
+        setLocationRelativeTo(null);
+    }
+
+    private void construirPaneles() {
+        cardLayout = new CardLayout();
+        panelContenedor = new JPanel(cardLayout);
+
+        PanelMenu menu = new PanelMenu(this);
+        PanelVisualizador visualizador = new PanelVisualizador(this);
+        panelReportes = new PanelReportes(this);
+
+        panelContenedor.add(menu, "menu");
+        panelContenedor.add(visualizador, "visualizador");
+        panelContenedor.add(panelReportes, "reportes");
+
+        add(panelContenedor);
+        mostrarPanel("menu");
+    }
+
+    public void mostrarPanel(String nombre) {
+        cardLayout.show(panelContenedor, nombre);
+    }
+
+    public PanelReportes getPanelReportes() {
+        return panelReportes;
+    }
+}

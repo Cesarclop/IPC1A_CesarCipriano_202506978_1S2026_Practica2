@@ -1,0 +1,55 @@
+package gui;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class PanelMenu extends JPanel {
+
+    private VentanaPrincipal ventana;
+
+    public PanelMenu(VentanaPrincipal ventana) {
+        this.ventana = ventana;
+        setLayout(new BorderLayout());
+        construirInterfaz();
+    }
+
+    private void construirInterfaz() {
+        JLabel titulo = new JLabel("Visualizador de Algoritmos de Ordenamiento",SwingConstants.CENTER);
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        titulo.setBorder(BorderFactory.createEmptyBorder(30, 0, 10, 0));
+        add(titulo, BorderLayout.NORTH);
+
+        JPanel panelBotones = new JPanel(new GridLayout(3, 1, 10, 10));
+        panelBotones.setBorder(BorderFactory.createEmptyBorder(40, 200, 40, 200));
+
+        JButton btnVisualizador = new JButton("Visualizador");
+        JButton btnReportes = new JButton("Reportes");
+        JButton btnAyuda = new JButton("Ayuda / Información");
+
+        btnVisualizador.addActionListener(e -> ventana.mostrarPanel("visualizador"));
+        btnReportes.addActionListener(e -> ventana.mostrarPanel("reportes"));
+        btnAyuda.addActionListener(e -> mostrarVentanaAyuda());
+
+        panelBotones.add(btnVisualizador);
+        panelBotones.add(btnReportes);
+        panelBotones.add(btnAyuda);
+
+        add(panelBotones, BorderLayout.CENTER);
+    }
+
+    private void mostrarVentanaAyuda() {
+        String contenido =
+            "Algoritmos implementados:\n"
+            + "  • Bubble Sort  — iterativo, compara elementos adyacentes.\n"
+            + "  • Shell Sort   — iterativo con gaps (brechas) decrecientes.\n"
+            + "  • Quick Sort   — recursivo, divide el arreglo usando un pivote.\n\n"
+            + "Instrucciones de uso:\n"
+            + "  1. Ingrese nú+meros manualmente, desde archivo .txt o de forma aleatoria.\n"
+            + "  2. Seleccione el algoritmo y el orden (ascendente / descendente).\n"
+            + "  3. Elija la velocidad de animación y presione 'Iniciar ordenamiento'.\n"
+            + "  4. Observe la animacion, las estadísticas y el log de operaciones.\n"
+            + "  5. Al finalizar, el reporte se guarda automaticamente en la carpeta 'reportes'.";
+
+        JOptionPane.showMessageDialog(this, contenido, "Ayuda", JOptionPane.INFORMATION_MESSAGE);
+    }
+}

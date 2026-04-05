@@ -1,0 +1,419 @@
+package gui;
+
+import javax.swing.*;
+import java.awt.*;
+import org.jfree.chart.*;
+import org.jfree.chart.axis.*;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
+
+
+public class PanelVisualizador extends JPanel {
+
+    private VentanaPrincipal ventana;
+
+    private JTextField campoEntrada;
+    private JButton btnCargar;
+    private JButton btnArchivo;
+    private JButton btnAleatorio;
+    private JButton btnIniciar;
+    private JSpinner selectorCantidad;
+
+    private JComboBox<String> selectorAlgoritmo;
+    private JComboBox<String> selectorOrden;
+    private JComboBox<String> selectorVelocidad;
+
+    private JTextArea areaLog;
+    private JLabel etiquetaComparaciones;
+    private JLabel etiquetaIntercambios;
+    private JLabel etiquetaIteraciones;
+
+    private ChartPanel panelGrafica;
+    private DefaultCategoryDataset datosGrafica;
+
+    private int[] arreglo;
+    private int[] estadoColores; // 0=normal,1=comparando,2=intercambiando,3=ordenado
+
+    private int[] arregloOriginal;
+    private String algoritmoUsado;
+    private boolean esAscendente;
+    private int retardoMs;
+    private long tiempoInicio;
+
+    private JPanel panelSuperior,panelControles,panelEstadisticas,panelLog,panelGrafico,panelInferior;
+
+    public PanelVisualizador(VentanaPrincipal ventana) {
+        this.ventana = ventana;
+        setLayout(new BorderLayout(20, 20));
+        setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
+        crearComponentes();
+        construirLayout();
+        aplicarEstilos();
+    }
+
+    private void crearComponentes() {
+        campoEntrada = new JTextField();
+        campoEntrada.setToolTipText("Ejemplo: 5, 2, 8, 1, 9");
+        btnCargar = new JButton("Cargar");
+        btnArchivo = new JButton("Cargar desde archivo");
+        btnAleatorio = new JButton("Aleatorio");
+        selectorCantidad = new JSpinner(new SpinnerNumberModel(10, 5, 30, 1));
+
+        selectorAlgoritmo = new JComboBox<>(new String[]{"Bubble Sort", "Shell Sort", "Quick Sort"});
+        selectorOrden = new JComboBox<>(new String[]{"Ascendente", "Descendente"});
+        selectorVelocidad = new JComboBox<>(new String[]{"Lento (500 ms)", "Medio (100 ms)", "Rápido (20 ms)"});
+        btnIniciar = new JButton("Iniciar ordenamiento");
+
+        areaLog = new JTextArea(8, 30);
+        areaLog.setEditable(false);
+        areaLog.setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+        etiquetaComparaciones = new JLabel("Comparaciones: 0", SwingConstants.CENTER);
+        etiquetaIntercambios = new JLabel("Intercambios: 0", SwingConstants.CENTER);
+        etiquetaIteraciones = new JLabel("Iteraciones: 0", SwingConstants.CENTER);
+
+        datosGrafica = new DefaultCategoryDataset();
+        JFreeChart grafica = ChartFactory.createBarChart("Visualización del arreglo", "Índice", "Valor", datosGrafica);
+        panelGrafica = new ChartPanel(grafica);
+        panelGrafica.setPreferredSize(new Dimension(800, 350));
+
+        BarRenderer renderer = new BarRenderer() {
+            @Override
+            public Paint getItemPaint(int serie, int indice) {
+                if (estadoColores != null && indice < estadoColores.length) {
+                    
+                    switch (estadoColores[indice]) {
+                        case 1:
+                            return new Color(255, 220, 0);
+                        case 2: 
+                            return new Color(220, 50, 50);
+                        case 3: 
+                            return new Color(50, 200, 50);
+                        default: 
+                            return new Color(50, 130, 220);
+                    }
+                }
+                return new Color(50, 130, 220);
+            }
+        };
+        
+        renderer.setDefaultItemLabelGenerator(new StandardCategoryItemLabelGenerator());
+        renderer.setDefaultItemLabelsVisible(true);
+        renderer.setDefaultItemLabelPaint(Color.WHITE);
+
+        ((CategoryPlot) grafica.getPlot()).setRenderer(renderer);
+
+        btnCargar.addActionListener(e -> cargarManual());
+        btnArchivo.addActionListener(e -> cargarDesdeArchivo());
+        btnAleatorio.addActionListener(e -> generarAleatorio());
+        btnIniciar.addActionListener(e -> iniciarOrdenamiento());
+    }
+
+    private void construirLayout() {
+        panelSuperior = new JPanel(new BorderLayout(15, 0));
+
+        panelControles = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        agregarA(panelControles, new JLabel("Ingreso manual:"), gbc, 0, 0, 1);
+        agregarA(panelControles, campoEntrada, gbc, 1, 0, 2);
+        agregarA(panelControles, btnCargar, gbc, 3, 0, 1);
+
+        agregarA(panelControles, btnArchivo, gbc, 0, 1, 1);
+        agregarA(panelControles, btnAleatorio, gbc, 1, 1, 1);
+        agregarA(panelControles, new JLabel("Cantidad:"), gbc, 2, 1, 1);
+        agregarA(panelControles, selectorCantidad, gbc, 3, 1, 1);
+
+        agregarA(panelControles, new JLabel("Algoritmo:"), gbc, 0, 2, 1);
+        agregarA(panelControles, selectorAlgoritmo, gbc, 1, 2, 1);
+        agregarA(panelControles, new JLabel("Orden:"), gbc, 2, 2, 1);
+        agregarA(panelControles, selectorOrden, gbc, 3, 2, 1);
+
+        agregarA(panelControles, new JLabel("Velocidad:"), gbc, 0, 3, 1);
+        agregarA(panelControles, selectorVelocidad, gbc, 1, 3, 3);
+
+        agregarA(panelControles, btnIniciar, gbc, 0, 4, 4);
+
+        panelEstadisticas = new JPanel(new GridLayout(3, 1, 5, 5));
+        panelEstadisticas.add(etiquetaComparaciones);
+        panelEstadisticas.add(etiquetaIntercambios);
+        panelEstadisticas.add(etiquetaIteraciones);
+
+        panelLog = new JPanel(new BorderLayout());
+        panelLog.add(new JScrollPane(areaLog), BorderLayout.CENTER);
+
+        panelSuperior.add(envolverConTitulo(panelControles, "Controles", new Dimension(480, 240)), BorderLayout.WEST);
+        panelSuperior.add(envolverConTitulo(panelEstadisticas, "Estadísticas", new Dimension(400, 240)), BorderLayout.CENTER);
+        panelSuperior.add(envolverConTitulo(panelLog, "Log", new Dimension(380, 240)), BorderLayout.EAST);
+
+        panelGrafico = new JPanel(new BorderLayout());
+        panelGrafico.add(panelGrafica, BorderLayout.CENTER);
+        panelGrafico.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
+        panelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnRegresar = new JButton("Regresar al Menú");
+        btnRegresar.addActionListener(e -> ventana.mostrarPanel("menu"));
+        panelInferior.add(btnRegresar);
+
+        add(panelSuperior, BorderLayout.NORTH);
+        add(panelGrafico, BorderLayout.CENTER);
+        add(panelInferior, BorderLayout.SOUTH);
+    }
+
+    private void agregarA(JPanel panel, JComponent componente, GridBagConstraints gbc, int columna, int fila, int ancho) {
+        gbc.gridx = columna;
+        gbc.gridy = fila;
+        gbc.gridwidth = ancho;
+        panel.add(componente, gbc);
+    }
+
+    private JPanel envolverConTitulo(JPanel contenido, String titulo, Dimension tamanio) {
+        JPanel diseno = new JPanel(new BorderLayout());
+        JLabel etiquetaTitulo = new JLabel(titulo, SwingConstants.CENTER);
+        etiquetaTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        etiquetaTitulo.setBorder(BorderFactory.createEmptyBorder(8, 0, 5, 0));
+        diseno.add(etiquetaTitulo, BorderLayout.NORTH);
+        diseno.add(contenido, BorderLayout.CENTER);
+        diseno.setPreferredSize(tamanio);
+        return diseno;
+    }
+
+    private void cargarManual() {
+        String texto = campoEntrada.getText().trim();
+        if (texto.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Ingrese numeros separados por comas.");
+            return;
+        }
+        parsearYCargar(texto);
+        agregarLog("Arreglo cargado desde ingreso manual.");
+    }
+
+    private void cargarDesdeArchivo() {
+        JFileChooser selector = new JFileChooser();
+        if (selector.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                java.io.File archivo = selector.getSelectedFile();
+                String contenido = new String(java.nio.file.Files.readAllBytes(archivo.toPath()));
+                parsearYCargar(contenido);
+                agregarLog("Archivo cargado: " + archivo.getName());
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al leer el archivo: " + e.getMessage());
+            }
+        }
+    }
+
+    private void generarAleatorio() {
+        int cantidad = (Integer) selectorCantidad.getValue();
+        arreglo = new int[cantidad];
+        estadoColores = new int[cantidad];
+        for (int i = 0; i < cantidad; i++) {
+            arreglo[i] = (int) (Math.random() * 100) + 1;
+        }
+        actualizarGrafica(arreglo);
+        agregarLog("Arreglo aleatorio generado con " + cantidad + " elementos.");
+    }
+
+    private void parsearYCargar(String texto) {
+        String[] partes = texto.split("[,\\s]+");
+        int[] temporal = new int[partes.length];
+        for (int i = 0; i < partes.length; i++) {
+            try {
+                temporal[i] = Integer.parseInt(partes[i].trim());
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this,"Valor no valido: \"" + partes[i] + "\"\n Ingrese solo numeros enteros.");
+                return;
+            }
+        }
+        arreglo = temporal;
+        estadoColores = new int[arreglo.length];
+        actualizarGrafica(arreglo);
+        agregarLog("Arreglo cargado con " + arreglo.length + " elementos.");
+    }
+
+    private void iniciarOrdenamiento() {
+        if (arreglo == null || arreglo.length == 0) {
+            JOptionPane.showMessageDialog(this, "Primero cargue o genere un arreglo de numeros.");
+            return;
+        }
+
+        arregloOriginal = arreglo.clone();
+        algoritmoUsado = (String) selectorAlgoritmo.getSelectedItem();
+        esAscendente = selectorOrden.getSelectedIndex() == 0;
+        retardoMs = leerVelocidad();
+        tiempoInicio = System.currentTimeMillis();
+
+        habilitarControles(false);
+
+        int[] copiaParaOrdenar = arreglo.clone();
+        HiloOrdenamiento hilo = new HiloOrdenamiento(this, copiaParaOrdenar, algoritmoUsado, esAscendente, retardoMs);
+        hilo.start();
+    }
+
+    private int leerVelocidad() {
+        String velocidad = (String) selectorVelocidad.getSelectedItem();
+        if (velocidad.contains("Lento")){
+            return 500;
+        }
+        if (velocidad.contains("Medio")){ 
+            return 100;
+        }
+        return 20;
+    }
+
+    private void setColorBarra(int indice, int estado) {
+        if (estadoColores != null && indice >= 0 && indice < estadoColores.length) {
+            estadoColores[indice] = estado;
+        }
+    }
+
+    private void refrescarGrafica() {
+        if (arreglo != null) {
+            actualizarGrafica(arreglo);
+        }
+    }
+
+    public void actualizarComparacion(int posA, int posB) {
+        setColorBarra(posA, 1);
+        setColorBarra(posB, 1);
+        refrescarGrafica();
+        agregarLog("Comparando posiciones " + posA + " y " + posB);
+    }
+
+    public void actualizarIntercambio(int posA, int posB) {
+        setColorBarra(posA, 2);
+        setColorBarra(posB, 2);
+        refrescarGrafica();
+        agregarLog("Intercambiando posiciones " + posA + " y " + posB);
+    }
+
+    public void limpiarColores(int posA, int posB) {
+        if (estadoColores == null){
+            return;
+        }
+        if (posA >= 0 && posA < estadoColores.length && estadoColores[posA] != 3)
+            estadoColores[posA] = 0;
+        if (posB >= 0 && posB < estadoColores.length && estadoColores[posB] != 3)
+            estadoColores[posB] = 0;
+        refrescarGrafica();
+    }
+
+    public void marcarOrdenado(int indice) {
+        if (estadoColores != null && indice >= 0 && indice < estadoColores.length) {
+            estadoColores[indice] = 3;
+            refrescarGrafica();
+        }
+    }
+
+    public void reiniciarEstadisticas() {
+        etiquetaComparaciones.setText("Comparaciones: 0");
+        etiquetaIntercambios.setText("Intercambios: 0");
+        etiquetaIteraciones.setText("Iteraciones: 0");
+    }
+
+    public void actualizarEstadisticas(int comparaciones, int intercambios, int iteraciones) {
+        etiquetaComparaciones.setText("Comparaciones: " + comparaciones);
+        etiquetaIntercambios.setText("Intercambios: " + intercambios);
+        etiquetaIteraciones.setText("Iteraciones: " + iteraciones);
+    }
+
+    public void limpiarLog() {
+        areaLog.setText("");
+    }
+
+    public void agregarLog(String mensaje) {
+        areaLog.append(mensaje + "\n");
+        areaLog.setCaretPosition(areaLog.getDocument().getLength());
+    }
+
+    public void actualizarGrafica(int[] arregloActual) {
+        arreglo = arregloActual;
+        datosGrafica.clear();
+        for (int i = 0; i < arregloActual.length; i++) {
+            datosGrafica.addValue(arregloActual[i], "Valor", String.valueOf(i));
+        }
+    }
+
+    public void habilitarControles(boolean habilitar) {
+        btnIniciar.setEnabled(habilitar);
+        btnCargar.setEnabled(habilitar);
+        btnArchivo.setEnabled(habilitar);
+        btnAleatorio.setEnabled(habilitar);
+        selectorAlgoritmo.setEnabled(habilitar);
+        selectorOrden.setEnabled(habilitar);
+        selectorVelocidad.setEnabled(habilitar);
+        campoEntrada.setEnabled(habilitar);
+        selectorCantidad.setEnabled(habilitar);
+    }
+
+    public void finalizarOrdenamiento(int[] arregloFinal, int comparaciones, int intercambios, int iteraciones) {
+        long tiempoTotalMs = System.currentTimeMillis() - tiempoInicio;
+
+        String textoOriginal = convertirArregloATexto(arregloOriginal);
+        String textoFinal = convertirArregloATexto(arregloFinal);
+        String perfilSistema = reportes.DatosSistema.obtenerPerfil();
+
+        PanelReportes panelReportes = ventana.getPanelReportes();
+
+        reportes.Ejecucion ejecucion = new reportes.Ejecucion( panelReportes.getSiguienteNumero(), algoritmoUsado, esAscendente ? "Ascendente" : "Descendente", arregloOriginal.length, comparaciones, intercambios, iteraciones, tiempoTotalMs, textoOriginal, textoFinal, convertirRetardoATexto(retardoMs), perfilSistema);
+        panelReportes.agregarEjecucion(ejecucion);
+    }
+
+    private String convertirArregloATexto(int[] a) {
+        if (a == null || a.length == 0) {
+            return "[]";
+        }
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < a.length; i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(a[i]);
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private String convertirRetardoATexto(int retardo) {
+        if (retardo == 500) {
+            return "Lento (500 ms)";
+    }
+        if (retardo == 100){
+            return "Medio (100 ms)";
+    }
+        
+        return "Rápido (20 ms)";
+    }
+
+    private void aplicarEstilos() {
+        Color fondoClaro = new Color(251, 251, 251);
+        Color fondoPanel = new Color(122, 178, 178);
+
+        setBackground(fondoClaro);
+        panelSuperior.setBackground(fondoClaro);
+        panelGrafico.setBackground(fondoClaro);
+        panelInferior.setBackground(fondoClaro);
+
+        panelControles.setBackground(fondoPanel);
+        panelEstadisticas.setBackground(fondoPanel);
+        panelLog.setBackground(fondoPanel);
+
+        JFreeChart grafica = panelGrafica.getChart();
+        CategoryPlot plot = (CategoryPlot) grafica.getPlot();
+
+        panelGrafica.setBackground(fondoClaro);
+        grafica.setBackgroundPaint(new Color(122, 178, 178));
+        plot.setBackgroundPaint(new Color(19, 36, 64));
+        plot.setDomainGridlinePaint(Color.GREEN);
+        plot.setRangeGridlinePaint(Color.YELLOW);
+
+        CategoryAxis ejeX = plot.getDomainAxis();
+        ejeX.setTickLabelPaint(Color.BLACK);
+        ejeX.setLabelPaint(Color.BLACK);
+
+        NumberAxis ejeY = (NumberAxis) plot.getRangeAxis();
+        ejeY.setTickLabelPaint(Color.BLACK);
+        ejeY.setLabelPaint(Color.BLACK);
+    }
+}
